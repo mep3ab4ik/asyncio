@@ -39,6 +39,11 @@ async def start_background_tasks(app):
     app['background_task'] = asyncio.create_task(background_task(app))
 
 
+async def stop_background_tasks(app):
+    app['background_task'].cancel()
+    await app['background_task']
+
+
 async def send_request(url):
     async with request('GET', url, headers={'User-Agent': user_agent}) as response:
         return url, response.status
@@ -61,6 +66,7 @@ app = web.Application(middlewares=[json_middleware])
 app.router.add_route('GET', '/ping', ping)
 app.router.add_route('GET', '/health', health)
 app.on_startup.append(start_background_tasks)
+app.on_cleanup.append(stop_background_tasks)
 
 if __name__ == '__main__':
     web.run_app(app, host='127.0.0.1')
